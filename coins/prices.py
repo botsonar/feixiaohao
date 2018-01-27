@@ -3,11 +3,14 @@
 
 import requests
 from bs4 import BeautifulSoup
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 coins = [
     "bitcoin",
     "raiblocks",
-    "iost"
+    "iost",
+    "gifto",
+    "eos"
 ]
 
 
@@ -28,9 +31,11 @@ def get_price(coin_type):
 
 
 def get_price_li():
+    executor = ThreadPoolExecutor(10)
+    futures = [executor.submit(get_price, coin) for coin in coins]
     prices = []
-    for coin in coins:
-        prices.extend(get_price(coin))
+    for r in as_completed(futures):
+        prices.extend(r.result())
     return prices
 
 
