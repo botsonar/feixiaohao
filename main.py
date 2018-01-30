@@ -2,12 +2,10 @@
 
 
 import logging
-import signal
-import sys
 
 from telegram.ext import Updater
 
-from handlers import start_handler, coin_handler
+from handlers import start_handler, coin_handler, error_handler
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -20,17 +18,16 @@ def main():
     :return:
     """
 
-    updater = Updater(token='538103918:AAHhhgULSMKLFcYtR9HDeNDPHlB0MthlLJg')
+    updater = Updater(
+        token='538103918:AAHhhgULSMKLFcYtR9HDeNDPHlB0MthlLJg',
+    )
     dispatcher = updater.dispatcher
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(coin_handler)
+    dispatcher.add_error_handler(error_handler)
 
-    def stop(signal, frame):
-        updater.stop()
-        sys.exit(0)
-
-    signal.signal(signal.SIGINT, stop)
     updater.start_polling(poll_interval=1.0)
+    updater.idle()
 
 
 if __name__ == "__main__":
