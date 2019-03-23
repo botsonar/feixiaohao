@@ -1,33 +1,23 @@
 # -*- coding: utf-8 -*-
 
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import as_completed
 
-import requests
-from bs4 import BeautifulSoup
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from requests_html import HTMLSession
+session = HTMLSession()
+
 
 coins = [
-    "bitcoin",
-    "raiblocks",
-    "iost",
-    "gifto",
-    "eos"
+    "cybermiles",
+    "decent"
 ]
 
 
 def get_price(coin_type):
-    """
-    Get coin price from feixiaohao
-
-    :param coin_type:
-    :return:
-    """
-    prices = []
-    resp = requests.get("https://www.feixiaohao.com/currencies/{0}/".format(coin_type))
-    bs = BeautifulSoup(resp.text, "lxml")
-    for maket in bs.find_all("div", class_="cell maket"):
-        for item in maket.find_all("div", class_="coinprice"):
-            prices.append((coin_type, item.next, item.span.text))
-    return prices
+    result = session.get("https://www.feixiaohao.com/currencies/{0}/".format(coin_type), verify=False, timeout=3)
+    if result:
+        return (coin_type, result.html.find(".val.textGreen")[0].text, result.html.find("div.sub.smallfont > span:nth-child(1)")[0].text)
+    return None
 
 
 def get_price_li():
@@ -35,7 +25,8 @@ def get_price_li():
     futures = [executor.submit(get_price, coin) for coin in coins]
     prices = []
     for r in as_completed(futures):
-        prices.extend(r.result())
+        if r.result():
+            prices.append(r.result())
     return prices
 
 
